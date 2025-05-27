@@ -1,0 +1,127 @@
+<html>
+  <head>
+
+    <!-- some basic stuff  -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SVG with D3</title>
+
+    
+
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/custom.css">
+
+    <!-- Step 2: add your d3 script below -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+
+    <!-- your JS code that uses d3 to manipulate data -->
+    
+<script>
+  const gridSize = 20, gap = 2;
+
+  d3.csv("sleep_data.csv", d => ({
+    ...d,
+    SleepHours: +d.SleepHours.trim() // parse as number
+  }))
+  .then(data => {
+    const myChart = d3
+      .select('#my-svg-chart')
+      .append('svg')
+      .attr('width', 640)
+      .attr('height', 640);
+
+    // Create <g> for each data point
+    const groups = myChart
+      .selectAll('g')
+      .data(data)
+      .join('g')
+      .attr('transform', (d, i) => {
+        const x = Math.floor(i % 10) * (gridSize + gap);
+        const y = Math.floor(i / 10) * (gridSize + gap);
+        return `translate(${x}, ${y})`;
+      });
+
+    // Append rect inside each group
+    groups
+      .append('rect')
+      .attr('width', gridSize)
+      .attr('height', gridSize)
+      .style('fill', d => {
+        const hours = d.SleepHours; // already a number
+        if (hours <= 4) return '#d73027';
+        else if (hours <= 6) return '#fc8d59';
+        else if (hours <= 8) return '#fee08b';
+        else return '#1a9850';
+      });
+
+    // Append hidden text initially
+    groups
+      .append('text')
+      .text(d => d.SleepHours)
+      .attr('x', gridSize / 2)
+      .attr('y', gridSize / 2 + 4)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#000')
+      .style('font-size', '10px')
+      .style('opacity', 0); // hide initially
+
+    // On hover: show text
+    groups
+      .on('mouseover', function () {
+        d3.select(this).select('text').transition().style('opacity', 1);
+      })
+      .on('mouseout', function () {
+        d3.select(this).select('text').transition().style('opacity', 0);
+      });
+
+    const legendData = [
+      { color: '#d73027', label: '0 – 4 hours - Did I even slept?' },
+      { color: '#fc8d59', label: '4 – 6h - Wish I could stay in bed...' },
+      { color: '#fee08b', label: "6 – 8h - Time to get up" },
+      { color: '#1a9850', label: "> 8h - I've slept like a baby!" }
+    ];
+
+    const legend = myChart
+      .append('g')
+      .attr('class', 'legend')
+      .attr('transform', `translate(300, 0)`); // posição da legenda no SVG
+
+    legend.selectAll('rect')
+      .data(legendData)
+      .enter()
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', (d, i) => i * 25)
+      .attr('width', 20)
+      .attr('height', 20)
+      .attr('fill', d => d.color);
+
+    legend.selectAll('text')
+      .data(legendData)
+      .enter()
+      .append('text')
+      .attr('x', 30)
+      .attr('y', (d, i) => i * 25 + 15)
+      .text(d => d.label)
+      .attr('font-size', '12px')
+      .attr('fill', '#000');
+
+      
+  });
+</script>
+
+
+
+    <!-- perhaps add the thing she talked in class, com o rato a passar por cima dos quadradinhos e a mostrar o número -->
+
+    <h1>How well did I slept?</h1>
+    <p>A daily look at my (fake) sleep hours from January to April 2025. <br> Color shades show the number of hours slept.</p>
+    <p>Rafael Oliveira | 20/05/2025, 22:34</p>
+    <div id="my-svg-chart"></div>
+
+
+
+
+
+  </head>
+</html>
